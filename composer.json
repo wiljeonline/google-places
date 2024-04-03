@@ -1,0 +1,21 @@
+{
+    "name": "wiljeonline/google-places",
+    "description": "Just a simple PHP class we use in our projects for the Google Places API.",
+    "type": "library",
+    "require": {
+        "php": ">=8.0.0"
+    },
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Jeroen Mulder",
+            "email": "jeroen@wiljeonline.nl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "WiljeOnline\\": "src/WiljeOnline/"
+        }
+    }
+}
