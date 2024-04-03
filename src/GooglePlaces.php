@@ -3,9 +3,10 @@
 /**
  * Class to get the reviews and aggregated rating from the Google Places API
  * 
- * @package Wilje_Online_Starter
- * 
  */
+
+namespace WiljeOnline;
+
 class GooglePlaces
 {
 
