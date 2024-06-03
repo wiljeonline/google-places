@@ -49,7 +49,7 @@ class GooglePlaces
     {
         if (!$this->apiKey || !$this->placeId) {
             // Throw an exception if the api key or place id is not set
-            throw new Exception('No valid API key or place id found');
+            throw new \Exception('No valid API key or place id found');
 
             // Is it wise to delete the cron job here?
             wp_clear_scheduled_hook('wo_fetch_google_places_data');
@@ -69,12 +69,12 @@ class GooglePlaces
                 $data = json_decode($response, true);
 
                 if (!isset($data['result'])) {
-                    throw new Exception('No valid place details found');
+                    throw new \Exception('No valid place details found');
                 }
 
                 return $data;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Handle the exception
             error_log(print_r($e->getMessage(), true));
         }
@@ -149,7 +149,7 @@ class GooglePlaces
         try {
             $this->getReviews();
             $this->getAggregatedRating();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('Error fetching data: ' . $e->getMessage());
         }
     }
