@@ -20,8 +20,8 @@ class GooglePlaces
         $this->placeId = $this->getPlaceId();
 
         // Check if the transients exist
-        $reviews_transient = get_transient('wo_reviews');
-        $aggregated_rating_transient = get_transient('wo_aggregated_rating');
+        $reviews_transient = get_option('wo_reviews');
+        $aggregated_rating_transient = get_option('wo_aggregated_rating');
 
         // If the transients do not exist, get the place details
         if (!$reviews_transient || !$aggregated_rating_transient) {
@@ -39,7 +39,7 @@ class GooglePlaces
     public function register_cron_job()
     {
         if (!wp_next_scheduled('wo_fetch_google_places_data')) {
-            wp_schedule_event(time(), 'twicedaily', 'wo_fetch_google_places_data');
+            wp_schedule_event(time(), 'daily', 'wo_fetch_google_places_data');
         }
 
         add_action('wo_fetch_google_places_data', [$this, 'fetchData']);
@@ -89,7 +89,7 @@ class GooglePlaces
      */
     public function getReviews()
     {
-        $reviews_transient = get_transient('wo_reviews');
+        $reviews_transient = get_option('wo_reviews');
 
         if ($reviews_transient) {
             return $reviews_transient;
@@ -100,7 +100,7 @@ class GooglePlaces
         }
 
         $reviews_transient = $this->placeDetails['result']['reviews'];
-        set_transient('wo_reviews', $reviews_transient, 60 * 60 * 24);
+        update_option('wo_reviews', $reviews_transient);
         return $reviews_transient;
     }
 
@@ -113,7 +113,7 @@ class GooglePlaces
      */
     public function getAggregatedRating()
     {
-        $aggregated_rating_transient = get_transient('wo_aggregated_rating');
+        $aggregated_rating_transient = get_option('wo_aggregated_rating');
 
         if ($aggregated_rating_transient) {
             return $aggregated_rating_transient;
@@ -132,7 +132,7 @@ class GooglePlaces
             $aggregated_rating_transient['user_ratings_total'] = $this->placeDetails['result']['user_ratings_total'];
         }
 
-        set_transient('wo_aggregated_rating', $aggregated_rating_transient, 60 * 60 * 24);
+        set_transient('wo_aggregated_rating', $aggregated_rating_transient);
         return $aggregated_rating_transient;
     }
 
@@ -142,8 +142,8 @@ class GooglePlaces
     public function fetchData()
     {
         // Delete the transients
-        delete_transient('wo_reviews');
-        delete_transient('wo_aggregated_rating');
+        delete_option('wo_reviews');
+        delete_option('wo_aggregated_rating');
 
         // Fetch the data
         try {

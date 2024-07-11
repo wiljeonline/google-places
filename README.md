@@ -60,13 +60,13 @@ $aggregatedRating = $googlePlaces->getAggregatedRating();
 ```
 ## Usage in your theme 
 You can now get the reviews and aggregated ratings through the WordPress options. 
-The settings are saved as transients and will expire after 24 hours maximum. The class is set up with a cron job that runs twice daily to fetch the new data.
+The settings are saved as options and will be deleted when cron runs (once daily). The class is set up with a cron job that runs twice daily to fetch the new data.
 
-**Get the transients** 
+**Get the options** 
 ```php 
-$reviews_transient = get_transient('wo_reviews');
+$reviews = get_option('wo_reviews');
 
-if( $reviews_transient ) { 
+if( $reviews ) { 
     // Do something with the reviews.
 }
 ```
