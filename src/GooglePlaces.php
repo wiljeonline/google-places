@@ -132,7 +132,7 @@ class GooglePlaces
             $aggregated_rating_transient['user_ratings_total'] = $this->placeDetails['result']['user_ratings_total'];
         }
 
-        set_transient('wo_aggregated_rating', $aggregated_rating_transient);
+        update_option('wo_aggregated_rating', $aggregated_rating_transient);
         return $aggregated_rating_transient;
     }
 
