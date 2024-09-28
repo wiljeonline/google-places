@@ -12,22 +12,13 @@ class GooglePlaces
 
     private $apiKey;
     private $placeId;
-    private $placeDetails;
 
     public function __construct()
     {
         $this->apiKey = $this->getApiKey();
         $this->placeId = $this->getPlaceId();
 
-        // Check if the transients exist
-        $reviews_transient = get_option('wo_reviews');
-        $aggregated_rating_transient = get_option('wo_aggregated_rating');
-
-        // If the transients do not exist, get the place details
-        if (!$reviews_transient || !$aggregated_rating_transient) {
-            $this->placeDetails = $this->getPlaceDetails();
-        }
-
+        // Only regsiter if not exists
         add_action('wp_loaded', [$this, 'register_cron_job']);
     }
 
@@ -61,11 +52,15 @@ class GooglePlaces
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
+            
             $response = curl_exec($curl);
+            error_log( print_r( 'Google API is running.', true ));
 
             curl_close($curl);
 
             if ($response) {
+                set_transient('wo_google_place_details', $response, DAY_IN_SECONDS); // Cache for a day
+
                 $data = json_decode($response, true);
 
                 if (!isset($data['result'])) {
@@ -89,18 +84,21 @@ class GooglePlaces
      */
     public function getReviews()
     {
-        $reviews_transient = get_option('wo_reviews');
+        $reviews_transient = get_transient('wo_reviews');
 
         if ($reviews_transient) {
             return $reviews_transient;
         }
 
-        if (!isset($this->placeDetails['result']['reviews'])) {
-            return;
+        if (!get_transient('wo_google_place_details')) {
+            $this->getPlaceDetails();
         }
 
-        $reviews_transient = $this->placeDetails['result']['reviews'];
-        update_option('wo_reviews', $reviews_transient);
+        $placeDetails = get_transient('wo_google_place_details');
+        $placeDetails = json_decode($placeDetails, true);
+
+        $reviews_transient = $placeDetails['result']['reviews'];
+        set_transient('wo_reviews', $reviews_transient, DAY_IN_SECONDS); // Cache for a day
         return $reviews_transient;
     }
 
@@ -113,26 +111,29 @@ class GooglePlaces
      */
     public function getAggregatedRating()
     {
-        $aggregated_rating_transient = get_option('wo_aggregated_rating');
+        $aggregated_rating_transient = get_transient('wo_aggregated_rating');
 
         if ($aggregated_rating_transient) {
             return $aggregated_rating_transient;
         }
 
-        if (!isset($this->placeDetails['result']['rating']) || !isset($this->placeDetails['result']['user_ratings_total'])) {
-            return;
+        if (!get_transient('wo_google_place_details')) {
+            $this->getPlaceDetails();
         }
+
+        $placeDetails = get_transient('wo_google_place_details');
+        $placeDetails = json_decode($placeDetails, true);
 
         $aggregated_rating_transient = [];
-        if (isset($this->placeDetails['result']['rating'])) {
-            $aggregated_rating_transient['rating'] = $this->placeDetails['result']['rating'];
+        if (isset($placeDetails['result']['rating'])) {
+            $aggregated_rating_transient['rating'] = $placeDetails['result']['rating'];
         }
 
-        if (isset($this->placeDetails['result']['user_ratings_total'])) {
-            $aggregated_rating_transient['user_ratings_total'] = $this->placeDetails['result']['user_ratings_total'];
+        if (isset($placeDetails['result']['user_ratings_total'])) {
+            $aggregated_rating_transient['user_ratings_total'] = $placeDetails['result']['user_ratings_total'];
         }
 
-        update_option('wo_aggregated_rating', $aggregated_rating_transient);
+        set_transient('wo_aggregated_rating', $aggregated_rating_transient, DAY_IN_SECONDS);
         return $aggregated_rating_transient;
     }
 
@@ -142,8 +143,9 @@ class GooglePlaces
     public function fetchData()
     {
         // Delete the transients
-        delete_option('wo_reviews');
-        delete_option('wo_aggregated_rating');
+        if (get_transient('wo_reviews') || get_transient('wo_aggregated_rating')) {
+            return;
+        }
 
         // Fetch the data
         try {
